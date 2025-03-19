@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+# Copyright © 2023-2025 Apple Inc.
+
+"""
+Command-line script for advanced model merging with MergeKit for MLX.
+"""
+
+from mergekit.merge_advanced import main
+
+if __name__ == "__main__":
+    main()
