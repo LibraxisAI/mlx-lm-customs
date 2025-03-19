@@ -1,0 +1,42 @@
+# Configuration for merging QwQ-32B with Bielik using MergeKit for MLX
+# This combines QwQ-32B's advanced reasoning capabilities with Polish language knowledge
+
+models:
+  - name: qwq
+    path: Qwen/QwQ-32B
+    base_model: true
+  - name: bielik
+    path: speakleash/Bielik-11B-v2.3-Instruct
+
+slices:
+  # First slice: merge the first 40 layers using SLERP
+  - sources:
+      - model: qwq
+        layer_range: [0, 40]
+      - model: bielik
+        layer_range: [0, 40]
+    merge_method: slerp
+    parameters:
+      t:
+        # Apply different interpolation values to different layer types
+        - filter: self_attn
+          value: [0, 0.3, 0.6, 0.8, 1]  # Gradually increase attention from QwQ towards Bielik
+        - filter: mlp
+          value: [1, 0.7, 0.4, 0.2, 0]  # Gradually decrease MLP from QwQ towards Bielik
+        - filter: embed
+          value: 0  # Keep QwQ embeddings (t=0)
+        - value: 0.5  # Default for other parameters
+
+  # Second slice: keep the remaining layers from QwQ-32B
+  - sources:
+      - model: qwq
+        layer_range: [40, 64]
+    merge_method: passthrough
+
+tokenizer:
+  source: qwq  # Use QwQ's tokenizer
+  preserve_embeddings: true
+
+advanced:
+  # Optional: Enable for machines with limited memory
+  low_memory: false
